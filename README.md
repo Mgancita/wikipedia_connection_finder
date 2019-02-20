@@ -1,4 +1,4 @@
-# wikipedia_connection_finder
+# Wikipedia Connection Finder
 Web crawling application which finds the most efficient internal wikipedia webpage connection between two wikipedia webpages
 
 ## Files
