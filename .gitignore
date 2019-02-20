@@ -1,0 +1,6 @@
+
+*.pyc
+
+.ipynb_checkpoints/Wiki_node_connection-checkpoint.py
+
+.ipynb_checkpoints/Wikipedia_node_connection_example-checkpoint.ipynb
