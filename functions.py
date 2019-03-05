@@ -11,30 +11,12 @@ import re
 from urllib.parse import urljoin,urlparse
 
 from bs4 import BeautifulSoup
+import networkx as nx
 import requests 
 
 def is_absolute(url):
     """Determine whether url is absolute or not."""
     return bool(urlparse(url).netloc)
-
-def bfs(graph, start, end):
-    # maintain a queue of paths
-    queue = []
-    # push the first path into the queue
-    queue.append([start])
-    while queue:
-        # get the first path from the queue
-        path = queue.pop(0)
-        # get the last node from the path
-        node = path[-1]
-        # path found
-        if node == end:
-            return path
-        # enumerate all adjacent nodes, construct a new path and push it into the queue
-        for adjacent in graph.get(node, []):
-            new_path = list(path)
-            new_path.append(adjacent)
-            queue.append(new_path)
 
 def find_connection(start_url,end_url,layer_cap = 7):
     base_url = 'https://en.wikipedia.org'
@@ -42,18 +24,18 @@ def find_connection(start_url,end_url,layer_cap = 7):
     internal_link = re.compile('/wiki/\S+')
     file = re.compile('\S*:\S*')
     
-    linked_sites = {start_url:0}
-    visited_sites = {}
+    network_graph = nx.Graph()
+    network_graph.add_node(start_url)
 
     q = queue.Queue()
     q.put((start_url,0))
-    hitler_found = False
+    end_found = False
     max_layer = 0
     print('Layer: %i' %max_layer)
-    while not hitler_found:
+    while not end_found:
         url_tuple = q.get()
         url = url_tuple[0]
-        url_layer = url_tuple[1]
+        url_layer = int(url_tuple[1])
         
         if(url_layer > max_layer):
             if(url_layer <= layer_cap):
@@ -68,7 +50,6 @@ def find_connection(start_url,end_url,layer_cap = 7):
         
         links = soup.find_all('a')
         links = [link for link in links if link is not None]
-        dict_links = []
         for link in links:
             #If link is an absolute link put as normal, if not make absolute
             u = link.get('href')
@@ -79,21 +60,19 @@ def find_connection(start_url,end_url,layer_cap = 7):
                 temp = urlparse(u)
                 u = temp.scheme + "://" + temp.netloc + temp.path
             
-                if u in linked_sites.keys():
-                    linked_sites[u] += 1
-                else:
-                    linked_sites[u] = 1
-                    q.put((u,url_layer + 1))
-                    dict_links.append(u)
+                if not network_graph.has_node(u):
+                    q.put((u,url_layer+1))
+                
+                network_graph.add_edge(url,u)
 
             if end_url == u:
-                hitler_found = True
+                end_found = True
                 print('Connection Found!')
                 break
-        visited_sites[url] = dict_links
-    results = bfs(visited_sites, start_url, end_url)
+    shortest_path = nx.shortest_path(network_graph, source=start_url, target=end_url)  
+    print('Degrees to end site: %i' %(len(shortest_path)-2))
     i = 0
-    print('Degrees to end site: %i' %(len(results)-2))
-    for result in results:
-        print('%i: %s'  %(i,result))
+    for node in shortest_path:
+        print('%i: %s'  %(i,node))
         i += 1
+    return network_graph
