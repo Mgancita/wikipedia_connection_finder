@@ -1,5 +1,6 @@
 # Wikipedia Connection Finder
-Web crawling application which finds the most efficient internal wikipedia webpage connection between two wikipedia webpages
+Web crawling application which finds the most efficient internal connection between two wikipedia
+ articles
 
 ## Files
 functions.py: Core functions which perform web crawling  
